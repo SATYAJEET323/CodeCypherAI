@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const userInput = document.getElementById('user-input');
     const sendButton = document.getElementById('send-button');
     const chatMessages = document.getElementById('chat-messages');
-    const navLinks = document.querySelectorAll('.nav-link');
+    const voiceButton = document.getElementById('voice-button');
     
     // Theme Toggle
     themeToggle.addEventListener('click', toggleTheme);
@@ -16,18 +16,6 @@ document.addEventListener('DOMContentLoaded', function() {
     } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
         document.body.classList.add('dark-mode');
     }
-    
-    // Navigation
-    navLinks.forEach(link => {
-        link.addEventListener('click', function(e) {
-            e.preventDefault();
-            navLinks.forEach(l => l.classList.remove('active'));
-            this.classList.add('active');
-            // Here you would typically load different content based on the page
-            // For this demo, we'll just show a message
-            addBotMessage(`You navigated to ${this.textContent} page. This is a demo - in a real app, this would load different content.`);
-        });
-    });
     
     // Send message on button click
     sendButton.addEventListener('click', sendMessage);
@@ -48,6 +36,10 @@ document.addEventListener('DOMContentLoaded', function() {
     setTimeout(() => {
         addBotMessage("Hello! I'm your Satyajeet's AI assistant. How can I help you today?");
     }, 500);
+    
+    // Voice Recognition Setup
+    let recognition = null;
+    initSpeechRecognition();
     
     // Functions
     function toggleTheme() {
@@ -86,7 +78,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (isHTML) {
             messageDiv.innerHTML = text;
         } else {
-            // Format response - convert markdown code blocks, tables, etc.
             const formattedText = formatResponse(text);
             messageDiv.innerHTML = formattedText;
         }
@@ -106,21 +97,19 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function formatResponse(text) {
-        // Check if prompt asks for differences/comparison (table)
         if (isDifferencePrompt(text)) {
-            return extractTable(text) || text; // Fallback to raw text if no table found
+            const table = extractTable(text);
+            return table ? table : formatStructuredText(text);
         }
         
-        // Check if prompt asks for code
         if (isCodePrompt(text)) {
-            return extractCode(text) || text; // Fallback to raw text if no code found
+            const code = extractCode(text);
+            return code ? code : formatStructuredText(text);
         }
         
-        // Default formatting for other responses
         return formatStructuredText(text);
     }
     
-    // Helper functions
     function isDifferencePrompt(text) {
         const triggers = ["difference between", "compare", "comparison", "vs", "versus"];
         return triggers.some(term => text.toLowerCase().includes(term));
@@ -172,22 +161,33 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function formatCode(code, language) {
+        const randomId = 'code-' + Math.random().toString(36).substring(2, 9);
         return `
             <div class="code-response">
                 <div class="code-header">
-                    <strong>${language ? language.toUpperCase() : 'CODE'}</strong>
-                    <small><em>Implementation Example</em></small>
+                    <div class="code-title">
+                        <strong>${language ? language.toUpperCase() : 'CODE'}</strong>
+                        <small><em>Implementation Example</em></small>
+                    </div>
+                    <div class="code-actions">
+                        <button class="copy-btn" data-target="${randomId}">
+                            <i class="fas fa-copy"></i> Copy
+                        </button>
+                    </div>
                 </div>
-                <pre><code>${code}</code></pre>
+                <pre id="${randomId}"><code>${code}</code></pre>
             </div>
         `;
     }
     
-    // New DOM elements
-    const voiceButton = document.getElementById('voice-button');
-    let recognition = null;
+    function formatStructuredText(text) {
+        return text
+            .replace(/^(#\s?(.*))/gm, '<strong class="response-title">$2</strong>')
+            .replace(/^(##\s?(.*))/gm, '<small><em class="response-subtitle">$2</em></small>')
+            .replace(/\n\n/g, '</p><p>')
+            .replace(/\n/g, '<br>');
+    }
     
-    // Initialize Speech Recognition
     function initSpeechRecognition() {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (SpeechRecognition) {
@@ -206,7 +206,6 @@ document.addEventListener('DOMContentLoaded', function() {
             recognition.onresult = (event) => {
                 const transcript = event.results[0][0].transcript;
                 userInput.value = transcript;
-                // Auto-send if the transcript ends with a question mark
                 if (transcript.trim().endsWith('?')) {
                     setTimeout(() => sendMessage(), 500);
                 }
@@ -240,54 +239,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Enhanced formatResponse function
-    function formatResponse(text) {
-        // Check if prompt asks for differences/comparison (table)
-        if (isDifferencePrompt(text)) {
-            const table = extractTable(text);
-            return table ? table : formatStructuredText(text);
-        }
-        
-        // Check if prompt asks for code
-        if (isCodePrompt(text)) {
-            const code = extractCode(text);
-            return code ? code : formatStructuredText(text);
-        }
-        
-        // Default formatting for other responses
-        return formatStructuredText(text);
-    }
-    
-    // Enhanced code extraction with copy button
-    function extractCode(text) {
-        const codeBlock = text.match(/```(\w*)([\s\S]*?)```/);
-        if (codeBlock) {
-            const [_, language, code] = codeBlock;
-            return formatCode(code.trim(), language);
-        }
-        return null;
-    }
-    
-    function formatCode(code, language) {
-        const randomId = 'code-' + Math.random().toString(36).substring(2, 9);
-        return `
-            <div class="code-response">
-                <div class="code-header">
-                    <div class="code-title">
-                        <strong>${language ? language.toUpperCase() : 'CODE'}</strong>
-                        <small><em>Implementation Example</em></small>
-                    </div>
-                    <div class="code-actions">
-                        <button class="copy-btn" data-target="${randomId}">
-                            <i class="fas fa-copy"></i> Copy
-                        </button>
-                    </div>
-                </div>
-                <pre id="${randomId}"><code>${code}</code></pre>
-            </div>
-        `;
-    }
-    
     // Copy button functionality
     document.addEventListener('click', (e) => {
         if (e.target.classList.contains('copy-btn') || e.target.closest('.copy-btn')) {
@@ -311,19 +262,46 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
-    function formatStructuredText(text) {
-        // Format headings and lists
-        return text
-            .replace(/^(#\s?(.*))/gm, '<strong class="response-title">$2</strong>') // # Title → bold
-            .replace(/^(##\s?(.*))/gm, '<small><em class="response-subtitle">$2</em></small>') // ## Subtitle → small italic
-            .replace(/\n\n/g, '</p><p>') // Paragraphs
-            .replace(/\n/g, '<br>'); // Line breaks
-    }
     
     async function callGeminiAPI(prompt, loadingId) {
-        const apiKey = 'AIzaSyCT8C5LrfUxIBLs7IMGCHntfx7hullpfKM'; // Replace with your actual API key
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
         try {
+            // Load API key from environment variable
+            let apiKey;
+            
+            // Try to get from window.__ENV first (for development)
+            if (window.__ENV && window.__ENV.GEMINI_API_KEY) {
+                apiKey = window.__ENV.GEMINI_API_KEY;
+            } 
+            // Fallback to trying to load from .env file
+            else {
+                try {
+                    const response = await fetch('/.env');
+                    if (response.ok) {
+                        const envText = await response.text();
+                        const envLines = envText.split('\n');
+                        for (const line of envLines) {
+                            if (line.startsWith('GEMINI_API_KEY=')) {
+                                apiKey = line.split('=')[1].trim();
+                                break;
+                            }
+                        }
+                    }
+                } catch (err) {
+                    console.log('Could not load .env file:', err);
+                }
+            }
+            
+            // Final fallback to prompt
+            if (!apiKey) {
+                apiKey = prompt("Please enter your Gemini API key:");
+                if (!apiKey) {
+                    updateBotMessage(loadingId, "API key is required to use this service.");
+                    return;
+                }
+            }
+            
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+            
             const response = await fetch(apiUrl, {
                 method: 'POST',
                 headers: {
