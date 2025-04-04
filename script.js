@@ -293,9 +293,9 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Final fallback to prompt
             if (!apiKey) {
-                apiKey = prompt("Please enter your Gemini API key:");
+                apiKey = prompt("Please enter your key:");
                 if (!apiKey) {
-                    updateBotMessage(loadingId, "API key is required to use this service.");
+                    updateBotMessage(loadingId, "SERVER key is required to use this service.");
                     return;
                 }
             }
@@ -317,7 +317,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             
             if (!response.ok) {
-                throw new Error(`API request failed with status ${response.status}`);
+                throw new Error(`SERVER request failed with status ${response.status}`);
             }
             
             const data = await response.json();
@@ -329,7 +329,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         } catch (error) {
             console.error('Error calling Gemini API:', error);
-            updateBotMessage(loadingId, "Sorry, I encountered an error. Please check your API key and try again.");
+            updateBotMessage(loadingId, "Sorry, I encountered an error. Please check your SERVER and try again.");
         }
     }
 });
