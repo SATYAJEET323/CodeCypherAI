@@ -183,6 +183,134 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
     }
     
+    // New DOM elements
+    const voiceButton = document.getElementById('voice-button');
+    let recognition = null;
+    
+    // Initialize Speech Recognition
+    function initSpeechRecognition() {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            
+            recognition.onstart = () => {
+                voiceButton.classList.add('listening');
+            };
+            
+            recognition.onend = () => {
+                voiceButton.classList.remove('listening');
+            };
+            
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                userInput.value = transcript;
+                // Auto-send if the transcript ends with a question mark
+                if (transcript.trim().endsWith('?')) {
+                    setTimeout(() => sendMessage(), 500);
+                }
+            };
+            
+            recognition.onerror = (event) => {
+                console.error('Speech recognition error:', event.error);
+                addBotMessage("Voice input failed. Please try again.");
+            };
+        } else {
+            voiceButton.style.display = 'none';
+            console.warn('Speech Recognition API not supported');
+        }
+    }
+    
+    // Voice button handler
+    voiceButton.addEventListener('click', () => {
+        if (!recognition) {
+            initSpeechRecognition();
+            return;
+        }
+        
+        if (voiceButton.classList.contains('listening')) {
+            recognition.stop();
+        } else {
+            try {
+                recognition.start();
+            } catch (error) {
+                console.error('Speech recognition start failed:', error);
+            }
+        }
+    });
+    
+    // Enhanced formatResponse function
+    function formatResponse(text) {
+        // Check if prompt asks for differences/comparison (table)
+        if (isDifferencePrompt(text)) {
+            const table = extractTable(text);
+            return table ? table : formatStructuredText(text);
+        }
+        
+        // Check if prompt asks for code
+        if (isCodePrompt(text)) {
+            const code = extractCode(text);
+            return code ? code : formatStructuredText(text);
+        }
+        
+        // Default formatting for other responses
+        return formatStructuredText(text);
+    }
+    
+    // Enhanced code extraction with copy button
+    function extractCode(text) {
+        const codeBlock = text.match(/```(\w*)([\s\S]*?)```/);
+        if (codeBlock) {
+            const [_, language, code] = codeBlock;
+            return formatCode(code.trim(), language);
+        }
+        return null;
+    }
+    
+    function formatCode(code, language) {
+        const randomId = 'code-' + Math.random().toString(36).substring(2, 9);
+        return `
+            <div class="code-response">
+                <div class="code-header">
+                    <div class="code-title">
+                        <strong>${language ? language.toUpperCase() : 'CODE'}</strong>
+                        <small><em>Implementation Example</em></small>
+                    </div>
+                    <div class="code-actions">
+                        <button class="copy-btn" data-target="${randomId}">
+                            <i class="fas fa-copy"></i> Copy
+                        </button>
+                    </div>
+                </div>
+                <pre id="${randomId}"><code>${code}</code></pre>
+            </div>
+        `;
+    }
+    
+    // Copy button functionality
+    document.addEventListener('click', (e) => {
+        if (e.target.classList.contains('copy-btn') || e.target.closest('.copy-btn')) {
+            const button = e.target.classList.contains('copy-btn') ? e.target : e.target.closest('.copy-btn');
+            const targetId = button.getAttribute('data-target');
+            const codeElement = document.getElementById(targetId);
+            
+            if (codeElement) {
+                navigator.clipboard.writeText(codeElement.textContent)
+                    .then(() => {
+                        button.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                        button.classList.add('copied');
+                        setTimeout(() => {
+                            button.innerHTML = '<i class="fas fa-copy"></i> Copy';
+                            button.classList.remove('copied');
+                        }, 2000);
+                    })
+                    .catch(err => {
+                        console.error('Failed to copy text: ', err);
+                    });
+            }
+        }
+    });
     function formatStructuredText(text) {
         // Format headings and lists
         return text
