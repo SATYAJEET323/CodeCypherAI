@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terms of Service - CodeCypher AI</title>
+    <style>
+        :root {
+            --primary-color: #4285f4;
+            --text-color: #333;
+            --bg-color: #f9f9f9;
+            --card-bg: #fff;
+        }
+        .dark-mode {
+            --primary-color: #8ab4f8;
+            --text-color: #e8eaed;
+            --bg-color: #202124;
+            --card-bg: #303134;
+        }
+        body {
+            font-family: 'Courier New', monospace;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+        }
+        .terms-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background-color: var(--card-bg);
+            border-radius: 8px;
+        }
+        .terms-section {
+            margin-bottom: 2rem;
+        }
+    </style>
+</head>
+<body class="light-mode">
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">CodeCypher AI</div>
+            <ul class="nav-links">
+                <li><a href="index.html" class="nav-link">Home</a></li>
+                <li><a href="vision.html" class="nav-link">Vision</a></li>
+                <li><a href="usage.html" class="nav-link">Usage</a></li>
+                <li><a href="history.html" class="nav-link">History</a></li>
+                <li><a href="profile.html" class="nav-link">Profile</a></li>
+            </ul>
+            <button class="theme-toggle">
+                <i class="fas fa-moon"></i>
+                <i class="fas fa-sun"></i>
+            </button>
+        </div>
+    </nav>
+
+    <main class="terms-container">
+        <h1>Terms of Service</h1>
+        
+        <div class="terms-section">
+            <h2>1. Acceptance of Terms</h2>
+            <p>By using CodeCypher AI, you agree to be bound by these terms and conditions.</p>
+        </div>
+        
+        <div class="terms-section">
+            <h2>2. Service Description</h2>
+            <p>CodeCypher AI provides AI-powered coding assistance. We make no guarantees about the accuracy of responses.</p>
+        </div>
+        
+        <div class="terms-section">
+            <h2>3. User Responsibilities</h2>
+            <p>You are responsible for validating any code or advice provided by the service before implementation.</p>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <span>© 2025 Satyajeet AI</span>
+            <span class="footer-separator">|</span>
+            <a href="privacy.html">Privacy</a>
+            <span class="footer-separator">|</span>
+            <a href="terms.html" class="active">Terms</a>
+            <span class="footer-separator">|</span>
+            <a href="contact.html">Contact</a>
+        </div>
+    </footer>
+
+    <script>
+        document.querySelector('.theme-toggle').addEventListener('click', function() {
+            document.body.classList.toggle('dark-mode');
+        });
+    </script>
+</body>
+</html>
