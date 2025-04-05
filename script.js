@@ -97,18 +97,102 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function formatResponse(text) {
-        if (isDifferencePrompt(text)) {
-            const table = extractTable(text);
-            return table ? table : formatStructuredText(text);
-        }
-        
+        // First check if this is a code or table response
         if (isCodePrompt(text)) {
             const code = extractCode(text);
-            return code ? code : formatStructuredText(text);
+            if (code) return code;
         }
         
-        return formatStructuredText(text);
+        if (isDifferencePrompt(text)) {
+            const table = extractTable(text);
+            if (table) return table;
+        }
+
+        // Process for clean, structured text without markdown
+        return formatCleanText(text);
     }
+
+    function formatCleanText(text) {
+        // Clean up the text by removing markdown symbols
+        let cleanedText = text
+            .replace(/\*\*/g, '') // Remove markdown bold
+            .replace(/\*/g, '')   // Remove markdown italics
+            .replace(/`/g, '')    // Remove code ticks
+            .replace(/^#+\s+/gm, '') // Remove markdown headings
+            .replace(/\[(.*?)\]\(.*?\)/g, '$1'); // Remove markdown links
+
+        // Split into paragraphs and process each one
+        let paragraphs = cleanedText.split('\n\n').filter(p => p.trim());
+        let formattedHTML = '';
+        
+        paragraphs.forEach((para, index) => {
+            // Add paragraph breaks between paragraphs
+            if (index > 0) {
+                formattedHTML += '<div class="paragraph-gap"></div>';
+            }
+            
+            // Highlight key terms and add proper line breaks
+            formattedHTML += `<p>${highlightKeyTerms(addLineBreaks(para))}</p>`;
+        });
+
+        return formattedHTML;
+    }
+
+    function highlightKeyTerms(text) {
+        // Highlight important terms
+        const keyTerms = [
+            'important', 'note', 'warning', 'key', 'essential',
+            'benefit', 'advantage', 'disadvantage', 'difference',
+            'example', 'tip', 'remember', 'warning', 'caution'
+        ];
+        
+        const pattern = new RegExp(`\\b(${keyTerms.join('|')})\\b`, 'gi');
+        return text.replace(pattern, '<span class="highlight">$1</span>');
+    }
+
+    function addLineBreaks(text) {
+        // Convert single newlines to proper HTML line breaks
+        return text.replace(/\n/g, '<br>');
+    }
+
+    // function formatConciseText(text) {
+    //     // Clean up the text first
+    //     let cleanedText = text
+    //         .replace(/\*\*/g, '') // Remove markdown bold
+    //         .replace(/\*/g, '')   // Remove markdown italics
+    //         .replace(/`/g, '');   // Remove code ticks
+
+    //     // Split into paragraphs
+    //     let paragraphs = cleanedText.split('\n\n');
+        
+    //     // Process each paragraph
+    //     let formattedHTML = '';
+    //     let isFirstParagraph = true;
+        
+    //     paragraphs.forEach(para => {
+    //         if (!para.trim()) return;
+            
+    //         // For the first paragraph (summary), keep it concise
+    //         if (isFirstParagraph) {
+    //             formattedHTML += `<p class="summary">${highlightKeyTerms(para)}</p>`;
+    //             isFirstParagraph = false;
+    //         } 
+    //         // For subsequent paragraphs (details), add expandable sections
+    //         else {
+    //             formattedHTML += `
+    //                 <div class="expandable-section">
+    //                     <div class="expandable-content">
+    //                         <p>${highlightKeyTerms(para)}</p>
+    //                     </div>
+    //                     <button class="expand-btn">Show more</button>
+    //                 </div>
+    //             `;
+    //         }
+    //     });
+
+    //     return formattedHTML;
+    // }
+    
     
     function isDifferencePrompt(text) {
         const triggers = ["difference between", "compare", "comparison", "vs", "versus"];
@@ -187,6 +271,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .replace(/\n\n/g, '</p><p>')
             .replace(/\n/g, '<br>');
     }
+
     
     function initSpeechRecognition() {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -240,7 +325,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // Copy button functionality
-    document.addEventListener('click', (e) => {
+    document.addEventListener('click', function(e) {
+        // Handle copy buttons (existing functionality)
         if (e.target.classList.contains('copy-btn') || e.target.closest('.copy-btn')) {
             const button = e.target.classList.contains('copy-btn') ? e.target : e.target.closest('.copy-btn');
             const targetId = button.getAttribute('data-target');
@@ -259,6 +345,20 @@ document.addEventListener('DOMContentLoaded', function() {
                     .catch(err => {
                         console.error('Failed to copy text: ', err);
                     });
+            }
+        }
+        
+        // Handle expand buttons (new functionality)
+        if (e.target.classList.contains('expand-btn')) {
+            const btn = e.target;
+            const content = btn.previousElementSibling;
+            
+            if (content.classList.contains('expanded')) {
+                content.classList.remove('expanded');
+                btn.textContent = 'Show more';
+            } else {
+                content.classList.add('expanded');
+                btn.textContent = 'Show less';
             }
         }
     });
