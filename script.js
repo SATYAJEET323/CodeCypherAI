@@ -154,45 +154,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Convert single newlines to proper HTML line breaks
         return text.replace(/\n/g, '<br>');
     }
-
-    // function formatConciseText(text) {
-    //     // Clean up the text first
-    //     let cleanedText = text
-    //         .replace(/\*\*/g, '') // Remove markdown bold
-    //         .replace(/\*/g, '')   // Remove markdown italics
-    //         .replace(/`/g, '');   // Remove code ticks
-
-    //     // Split into paragraphs
-    //     let paragraphs = cleanedText.split('\n\n');
-        
-    //     // Process each paragraph
-    //     let formattedHTML = '';
-    //     let isFirstParagraph = true;
-        
-    //     paragraphs.forEach(para => {
-    //         if (!para.trim()) return;
-            
-    //         // For the first paragraph (summary), keep it concise
-    //         if (isFirstParagraph) {
-    //             formattedHTML += `<p class="summary">${highlightKeyTerms(para)}</p>`;
-    //             isFirstParagraph = false;
-    //         } 
-    //         // For subsequent paragraphs (details), add expandable sections
-    //         else {
-    //             formattedHTML += `
-    //                 <div class="expandable-section">
-    //                     <div class="expandable-content">
-    //                         <p>${highlightKeyTerms(para)}</p>
-    //                     </div>
-    //                     <button class="expand-btn">Show more</button>
-    //                 </div>
-    //             `;
-    //         }
-    //     });
-
-    //     return formattedHTML;
-    // }
-    
+  
     
     function isDifferencePrompt(text) {
         const triggers = ["difference between", "compare", "comparison", "vs", "versus"];
