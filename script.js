@@ -327,130 +327,96 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // [Previous code remains the same until callGeminiAPI function]
 
-async function callGeminiAPI(prompt, loadingId) {
-    try {
-        // First check for custom prompts
-        const lowerPrompt = prompt.toLowerCase();
-        
-        // Owner/development related questions
-        const ownerPrompts = [
-            'who is the owner of you ?', 'who built this', 'who created you', 
-            'who developed you', 'who made you', 'who owns you',
-            'who maintains you', 'who is behind you', 'who trained you',
-            'what data was used', 'how were you trained', 'machine learning techniques',
-            'programming languages used', 'intellectual property', 'development team',
-            'key datasets', 'training process', 'unbiased data', 'model architecture'
-        ];
-        
-        if (ownerPrompts.some(term => lowerPrompt.includes(term))) {
-            const response = `
-                I was developed by CodeCypher AI, a project created by Satyajeet Sanjay Desai. 
-                Here are some details about my development:
-                
-                - Training Data: I was trained on diverse technical documentation, programming resources, 
-                and computer science concepts to specialize in developer assistance.
-                
-                - Techniques: My architecture uses transformer-based models fine-tuned for code generation 
-                and technical explanations.
-                
-                - Development Stack: Built using Python, TensorFlow, and various NLP libraries.
-                
-                - Ownership: All intellectual property rights belong to CodeCypher AI.
-                
-                - Goal: To provide helpful, accurate technical assistance to developers and students.
-            `;
-            updateBotMessage(loadingId, response);
-            return;
-        }
-        
-        // Personal questions about Satyajeet
-        const personalPrompts = [
-            'who is satyajeet', 'about satyajeet', 'satyajeet desai',
-            'your creator background', 'who made you background',
-            'satyajeet sanjay desai'
-        ];
-        
-        if (personalPrompts.some(term => lowerPrompt.includes(term))) {
-            const response = `
-                Satyajeet Sanjay Desai is my creator. Here's some information about him:
-                
-                - Born: 2004
-                - Education: Third year Computer Engineering student
-                - Skills: MERN stack, Machine Learning, AI Engineering, 
-                Database Engineering, Web and Software Development
-                - Location: Maharashtra, India
-                - Project: Creator of CodeCypher AI
-                
-                He specializes in building intelligent systems and developer tools.
-            `;
-            updateBotMessage(loadingId, response);
-            return;
-        }
-
-        // Default case - call Gemini API
-        let apiKey;
-        
-        // [Rest of your existing API key handling code]
-        if (window.__ENV && window.__ENV.GEMINI_API_KEY) {
-            apiKey = window.__ENV.GEMINI_API_KEY;
-        } else {
-            try {
-                const response = await fetch('/.env');
-                if (response.ok) {
-                    const envText = await response.text();
-                    const envLines = envText.split('\n');
-                    for (const line of envLines) {
-                        if (line.startsWith('GEMINI_API_KEY=')) {
-                            apiKey = line.split('=')[1].trim();
-                            break;
-                        }
-                    }
-                }
-            } catch (err) {
-                console.log('Could not load .env file:', err);
-            }
-        }
-        
-        if (!apiKey) {
-            apiKey = prompt("Please enter your API key:");
-            if (!apiKey) {
-                updateBotMessage(loadingId, "API key is required to use this service.");
+    async function callGeminiAPI(prompt, loadingId) {
+        try {
+            // First check for custom prompts
+            const lowerPrompt = prompt.toLowerCase();
+            
+            // Owner/development related questions - now with concise responses
+            const ownerPrompts = [
+                'who is the owner', 'who built this', 'who created you', 
+                'who developed you', 'who made you', 'who owns you',
+                'who maintains you', 'who is behind you', 'who trained you',
+                'what data was used', 'how were you trained', 'machine learning techniques',
+                'programming languages used', 'intellectual property', 'development team',
+                'key datasets', 'training process', 'unbiased data', 'model architecture'
+            ];
+            
+            if (ownerPrompts.some(term => lowerPrompt.includes(term))) {
+                const response = `I was created by Satyajeet Sanjay Desai through CodeCypher AI. I'm an AI assistant specialized in technical and programming help, built using modern machine learning techniques.`;
+                updateBotMessage(loadingId, response);
                 return;
             }
-        }
-        
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-        
-        const response = await fetch(apiUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                contents: [{
-                    parts: [{
-                        text: prompt
+            
+            // Personal questions - concise version
+            const personalPrompts = [
+                'who is satyajeet', 'about satyajeet', 'satyajeet desai',
+                'your creator background', 'who made you background',
+                'satyajeet sanjay desai'
+            ];
+            
+            if (personalPrompts.some(term => lowerPrompt.includes(term))) {
+                const response = `Satyajeet Sanjay Desai is a Computer Engineering student and full-stack developer specializing in AI, web development, and software engineering.`;
+                updateBotMessage(loadingId, response);
+                return;
+            }
+    
+            // For Netlify environment variable issue
+            let apiKey = process.env.GEMINI_API_KEY || window.__ENV?.GEMINI_API_KEY;
+            
+            if (!apiKey) {
+                try {
+                    // Fallback for Netlify (create a public config file instead)
+                    const response = await fetch('/config.json');
+                    if (response.ok) {
+                        const config = await response.json();
+                        apiKey = config.GEMINI_API_KEY;
+                    }
+                } catch (err) {
+                    console.log('Could not load config:', err);
+                }
+            }
+            
+            if (!apiKey) {
+                apiKey = prompt("Please enter your API key:");
+                if (!apiKey) {
+                    updateBotMessage(loadingId, "API key is required.");
+                    return;
+                }
+            }
+            
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+            
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    contents: [{
+                        parts: [{
+                            text: `Respond concisely to: ${prompt} (keep response under 150 words)`
+                        }]
                     }]
-                }]
-            })
-        });
-        
-        if (!response.ok) {
-            throw new Error(`API request failed with status ${response.status}`);
+                })
+            });
+            
+            if (!response.ok) throw new Error(`API request failed`);
+            
+            const data = await response.json();
+            const fullResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || "I couldn't process that request.";
+            
+            // Truncate response if too long
+            const conciseResponse = fullResponse.length > 300 
+                ? fullResponse.substring(0, 300) + '...' 
+                : fullResponse;
+                
+            updateBotMessage(loadingId, conciseResponse);
+        } catch (error) {
+            console.error('Error:', error);
+            updateBotMessage(loadingId, "Sorry, I encountered an error. Please try again.");
         }
-        
-        const data = await response.json();
-        
-        if (data.candidates && data.candidates[0].content.parts[0].text) {
-            updateBotMessage(loadingId, data.candidates[0].content.parts[0].text);
-        } else {
-            updateBotMessage(loadingId, "I couldn't process that request. Please try again.");
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        updateBotMessage(loadingId, "Sorry, I encountered an error. Please try again.");
     }
-}
 
 // [Rest of your existing code]
 });
