@@ -362,7 +362,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
     
             // For Netlify environment variable issue
-            let apiKey = process.env.GEMINI_API_KEY || window.__ENV?.GEMINI_API_KEY;
+            let apiKey = window.__ENV?.GEMINI_API_KEY;
             
             if (!apiKey) {
                 try {
